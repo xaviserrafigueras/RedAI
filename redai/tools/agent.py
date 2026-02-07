@@ -6,11 +6,19 @@ Step-by-step execution: Think → Execute → Analyze → Repeat
 import subprocess
 import re
 import json
+import os
 from typing import Optional, Dict, Any
+
+# Enable readline for proper terminal input (backspace, arrows, history)
+try:
+    import readline  # noqa: F401
+except ImportError:
+    pass  # readline not available on Windows
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
+from rich.prompt import Confirm, Prompt
 
 from redai.core.display import display
 from redai.ai.client import get_client, get_model_name
@@ -202,6 +210,9 @@ def agent(project: str = "General", auto_approve: bool = False):
     
     while True:
         try:
+            # Reset terminal before input (fixes ^H issue on Linux)
+            os.system('stty sane 2>/dev/null')
+            
             # Get user input
             try:
                 user_input = input("\n🔴 Objective: ")
@@ -277,17 +288,9 @@ def agent(project: str = "General", auto_approve: bool = False):
                     
                     # Confirm execution
                     if not auto_approve:
-                        try:
-                            confirm = input("\n Execute this command? [Y/n]: ").strip().lower()
-                        except EOFError:
-                            confirm = "y"
-                        
-                        if confirm == "n":
+                        if not Confirm.ask("Execute this command?", default=True):
                             console.print("[yellow]Skipped. Tell me what to do instead.[/yellow]")
-                            try:
-                                user_feedback = input(" Your input: ")
-                            except EOFError:
-                                user_feedback = "skip"
+                            user_feedback = Prompt.ask("Your input")
                             conversation.append({"role": "user", "content": f"Usuario decidió no ejecutar. Feedback: {user_feedback}"})
                             continue
                     
@@ -343,10 +346,7 @@ def agent(project: str = "General", auto_approve: bool = False):
                     question = parsed.get("question", "")
                     console.print(Panel(question, title="❓ Agent Question", border_style="cyan"))
                     
-                    try:
-                        answer = input(" Your answer: ")
-                    except EOFError:
-                        answer = "skip"
+                    answer = Prompt.ask("Your answer")
                     conversation.append({"role": "assistant", "content": ai_text})
                     conversation.append({"role": "user", "content": f"RESPUESTA: {answer}"})
                 
