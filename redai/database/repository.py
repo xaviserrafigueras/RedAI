@@ -75,3 +75,49 @@ def get_agent_history(project_name: str) -> List[AgentHistory]:
             .order_by(AgentHistory.timestamp.asc())
         )
         return session.exec(statement).all()
+
+
+# --- AGENT STEP FUNCTIONS (for detailed reports) ---
+
+def save_agent_step(
+    project_name: str,
+    objective: str,
+    step_number: int,
+    action_type: str,
+    thought: str = None,
+    command: str = None,
+    output: str = None,
+    explanation: str = None,
+    findings: str = None,
+    recommendations: str = None
+):
+    """Save an agent step for detailed reporting."""
+    from redai.database.models import AgentStep
+    with Session(engine) as session:
+        step = AgentStep(
+            project_name=project_name,
+            objective=objective,
+            step_number=step_number,
+            action_type=action_type,
+            thought=thought,
+            command=command,
+            output=output,
+            explanation=explanation,
+            findings=findings,
+            recommendations=recommendations
+        )
+        session.add(step)
+        session.commit()
+
+
+def get_agent_steps(project_name: str) -> List:
+    """Retrieve all agent steps for a project, ordered by timestamp."""
+    from redai.database.models import AgentStep
+    with Session(engine) as session:
+        statement = (
+            select(AgentStep)
+            .where(AgentStep.project_name == project_name)
+            .order_by(AgentStep.timestamp.asc())
+        )
+        return session.exec(statement).all()
+

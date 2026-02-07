@@ -26,3 +26,20 @@ class AgentHistory(SQLModel, table=True):
     project_name: str = Field(index=True)
     role: str  # user, assistant, system
     content: str
+
+
+class AgentStep(SQLModel, table=True):
+    """Stores each step of the autonomous agent for detailed reporting."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    timestamp: datetime = Field(default_factory=datetime.now)
+    project_name: str = Field(index=True)
+    objective: str  # The user's objective
+    step_number: int
+    action_type: str  # execute, analyze, explain, ask, complete
+    thought: Optional[str] = None  # AI's reasoning
+    command: Optional[str] = None  # Command executed (if any)
+    output: Optional[str] = None  # Command output (if any)
+    explanation: Optional[str] = None  # AI's explanation
+    findings: Optional[str] = None  # JSON array of findings
+    recommendations: Optional[str] = None  # JSON array of recommendations
+

@@ -23,7 +23,7 @@ from rich.prompt import Confirm, Prompt
 from redai.core.display import display
 from redai.ai.client import get_client, get_model_name
 from redai.ai.cortex import CortexMemory
-from redai.database.repository import save_scan
+from redai.database.repository import save_scan, save_agent_step
 
 
 console = Console()
@@ -317,6 +317,18 @@ def agent(project: str = "General", auto_approve: bool = False):
                         project_name=project
                     )
                     
+                    # Save step for detailed report
+                    save_agent_step(
+                        project_name=project,
+                        objective=user_input,
+                        step_number=step,
+                        action_type="execute",
+                        thought=thought,
+                        command=cmd,
+                        output=output[:10000],
+                        explanation=explanation
+                    )
+                    
                     # Add to conversation for next iteration
                     conversation.append({"role": "assistant", "content": ai_text})
                     conversation.append({"role": "user", "content": f"RESULTADO DEL COMANDO:\n{output[:4000]}\n\nAnaliza este resultado y decide el siguiente paso."})
@@ -337,6 +349,17 @@ def agent(project: str = "General", auto_approve: bool = False):
                     
                     if next_step:
                         console.print(Panel(next_step, title="➡️ Next Step", border_style="cyan"))
+                    
+                    # Save step for detailed report
+                    save_agent_step(
+                        project_name=project,
+                        objective=user_input,
+                        step_number=step,
+                        action_type="analyze",
+                        thought=thought,
+                        findings=json.dumps(findings) if findings else None,
+                        explanation=next_step
+                    )
                     
                     conversation.append({"role": "assistant", "content": ai_text})
                     conversation.append({"role": "user", "content": "Procede con el siguiente paso."})
@@ -365,6 +388,17 @@ def agent(project: str = "General", auto_approve: bool = False):
                         # Save suggested commands to session memory
                         session_summary.append(f"[RECOMENDACIÓN] {title}: " + ", ".join(commands[:3]))
                     
+                    # Save step for detailed report
+                    save_agent_step(
+                        project_name=project,
+                        objective=user_input,
+                        step_number=step,
+                        action_type="explain",
+                        thought=thought,
+                        explanation=explanation,
+                        recommendations=json.dumps(commands) if commands else None
+                    )
+                    
                     # End the loop for this objective - explanation is complete
                     break
                 
@@ -382,6 +416,17 @@ def agent(project: str = "General", auto_approve: bool = False):
                         # Save recommendations to session memory
                         for r in recommendations:
                             session_summary.append(f"[RECOMENDACIÓN] {r}")
+                    
+                    # Save step for detailed report
+                    save_agent_step(
+                        project_name=project,
+                        objective=user_input,
+                        step_number=step,
+                        action_type="complete",
+                        thought=thought,
+                        explanation=summary,
+                        recommendations=json.dumps(recommendations) if recommendations else None
+                    )
                     
                     break
                 
