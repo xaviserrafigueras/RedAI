@@ -24,12 +24,14 @@ console = Console()
 AGENT_SYSTEM_PROMPT = """Eres RedAI Cortex, un Agente Autónomo de Pentesting.
 Operas en Kali Linux con acceso completo a herramientas de seguridad.
 
+IMPORTANTE: Cada OBJETIVO es independiente. Cuando el usuario introduce un nuevo objetivo,
+enfócate SOLO en ese nuevo objetivo. No mezcles con objetivos anteriores.
+
 MODO DE OPERACIÓN:
 1. Analiza el objetivo del usuario
-2. Planifica el siguiente paso lógico
-3. Ejecuta UN comando a la vez
-4. Analiza el resultado
-5. Decide el siguiente paso
+2. Si es una PREGUNTA (cómo, qué, por qué), responde con action="explain"
+3. Si requiere EJECUCIÓN, planifica y ejecuta comandos
+4. Analiza resultados y decide siguiente paso
 
 HERRAMIENTAS DISPONIBLES:
 - Recon: nmap, masscan, whois, dig, whatweb, nikto
@@ -38,8 +40,18 @@ HERRAMIENTAS DISPONIBLES:
 - Exploit: searchsploit, msfconsole, hydra
 - Network: arp-scan, netdiscover, tcpdump
 
-FORMATO DE RESPUESTA (OBLIGATORIO):
-Responde SIEMPRE en JSON válido:
+FORMATO DE RESPUESTA (OBLIGATORIO - siempre JSON válido):
+
+Para EXPLICAR o responder preguntas (cuando el usuario pregunta "cómo", "qué", "por qué"):
+```json
+{
+    "thought": "El usuario pregunta cómo hacer X...",
+    "action": "explain",
+    "title": "Título de la explicación",
+    "explanation": "Explicación detallada paso a paso...",
+    "commands": ["comando1 opcional", "comando2 opcional"]
+}
+```
 
 Para ejecutar un comando:
 ```json
@@ -81,10 +93,11 @@ Para finalizar:
 ```
 
 REGLAS:
-- Solo UN comando por respuesta
+- Si el usuario hace una PREGUNTA, usa action="explain" para responder directamente
+- Solo UN comando por respuesta cuando uses action="execute"
 - Siempre responde en JSON válido
 - No inventes resultados, ejecuta comandos reales
-- Mantén el contexto de lo que has descubierto
+- Cada nuevo objetivo es INDEPENDIENTE del anterior
 """
 
 
@@ -201,7 +214,10 @@ def agent(project: str = "General", auto_approve: bool = False):
             
             # Set objective in memory
             memory.set_objective(user_input)
-            conversation.append({"role": "user", "content": f"OBJETIVO: {user_input}"})
+            
+            # Reset conversation for new objective (keep only system prompt)
+            conversation = [{"role": "system", "content": AGENT_SYSTEM_PROMPT}]
+            conversation.append({"role": "user", "content": f"NUEVO OBJETIVO: {user_input}"})
             
             # Autonomous loop
             step = 0
@@ -315,6 +331,22 @@ def agent(project: str = "General", auto_approve: bool = False):
                         answer = "skip"
                     conversation.append({"role": "assistant", "content": ai_text})
                     conversation.append({"role": "user", "content": f"RESPUESTA: {answer}"})
+                
+                # EXPLAIN - Direct explanation without command execution
+                elif action == "explain":
+                    title = parsed.get("title", "Explicación")
+                    explanation = parsed.get("explanation", "")
+                    commands = parsed.get("commands", [])
+                    
+                    console.print(f"\n[bold cyan]═══ {title.upper()} ═══[/bold cyan]")
+                    console.print(Panel(explanation, title="📚 Explicación", border_style="cyan"))
+                    
+                    if commands:
+                        cmd_text = "\n".join([f"  {cmd}" for cmd in commands])
+                        console.print(Panel(cmd_text, title="💻 Comandos Sugeridos", border_style="green"))
+                    
+                    # End the loop for this objective - explanation is complete
+                    break
                 
                 # COMPLETE
                 elif action == "complete":
