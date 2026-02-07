@@ -15,9 +15,18 @@
 ```bash
 git clone https://github.com/YOUR_USERNAME/RedAI.git
 cd RedAI
+
+# Create virtual environment (required on Kali Linux)
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Configure API key
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+nano .env  # Add your OPENAI_API_KEY
 ```
 
 ## 🚀 Usage
