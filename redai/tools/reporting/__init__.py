@@ -1,6 +1,6 @@
 """
-Reporting Tools - HTML, PDF, Phishing Templates
+Reporting Tools - HTML, Phishing
 """
 
-from redai.tools.reporting.html import html_report
-from redai.tools.reporting.phishing import phishing_gen
+from redai.tools.reporting import html
+from redai.tools.reporting import phishing

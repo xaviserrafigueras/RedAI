@@ -258,46 +258,63 @@ def interactive_menu():
 # Register tool commands to the app
 def register_commands():
     """Register all tool commands to the Typer app."""
-    from redai.tools.recon import nmap, subdomains as sub_mod, fuzzing, wordpress, shodan
-    from redai.tools.osint import username, phone, dorks, metadata, harvester
-    from redai.tools.exploit import sqli as sqli_mod, xss as xss_mod, bruteforce, crack as crack_mod, exploits, payload
-    from redai.tools.network import wifi, sniffer as sniff_mod, arp
-    from redai.tools.reporting import html, phishing
+    # Import directly from module files to avoid __init__.py conflicts
+    from redai.tools.recon import nmap as nmap_mod
+    from redai.tools.recon import subdomains as sub_mod
+    from redai.tools.recon import fuzzing as fuzz_mod
+    from redai.tools.recon import wordpress as wp_mod
+    from redai.tools.recon import shodan as shodan_mod
+    from redai.tools.osint import username as user_mod
+    from redai.tools.osint import phone as phone_mod
+    from redai.tools.osint import dorks as dorks_mod
+    from redai.tools.osint import metadata as meta_mod
+    from redai.tools.osint import harvester as harv_mod
+    from redai.tools.exploit import sqli as sqli_mod
+    from redai.tools.exploit import xss as xss_mod
+    from redai.tools.exploit import bruteforce as brute_mod
+    from redai.tools.exploit import crack as crack_mod
+    from redai.tools.exploit import exploits as exp_mod
+    from redai.tools.exploit import payload as pay_mod
+    from redai.tools.network import wifi as wifi_mod
+    from redai.tools.network import sniffer as sniff_mod
+    from redai.tools.network import arp as arp_mod
+    from redai.tools.reporting import html as html_mod
+    from redai.tools.reporting import phishing as phish_mod
     
     # Recon
-    app.command(name="scan")(nmap.scan)
-    app.command(name="net-scan")(nmap.net_scan)
+    app.command(name="scan")(nmap_mod.scan)
+    app.command(name="net-scan")(nmap_mod.net_scan)
     app.command(name="subdomains")(sub_mod.subdomains)
     app.command(name="sub-takeover")(sub_mod.sub_takeover)
-    app.command(name="fuzz")(fuzzing.fuzz)
-    app.command(name="wp-scan")(wordpress.wp_scan)
-    app.command(name="shodan")(shodan.shodan_scan)
+    app.command(name="fuzz")(fuzz_mod.fuzz)
+    app.command(name="wp-scan")(wp_mod.wp_scan)
+    app.command(name="shodan")(shodan_mod.shodan_scan)
     
     # OSINT
-    app.command(name="username")(username.username_osint)
-    app.command(name="phone")(phone.phone_osint)
-    app.command(name="dorks")(dorks.dork_gen)
-    app.command(name="metadata")(metadata.metadata_scan)
-    app.command(name="exif")(metadata.exif_scan)
-    app.command(name="harvester")(harvester.harvester_scan)
+    app.command(name="username")(user_mod.username_osint)
+    app.command(name="phone")(phone_mod.phone_osint)
+    app.command(name="dorks")(dorks_mod.dork_gen)
+    app.command(name="metadata")(meta_mod.metadata_scan)
+    app.command(name="exif")(meta_mod.exif_scan)
+    app.command(name="harvester")(harv_mod.harvester_scan)
     
     # Exploit
     app.command(name="sqli")(sqli_mod.sqli)
     app.command(name="xss")(xss_mod.xss)
-    app.command(name="brute")(bruteforce.brute)
+    app.command(name="brute")(brute_mod.brute)
     app.command(name="crack")(crack_mod.crack)
-    app.command(name="exploits")(exploits.search_exploits)
-    app.command(name="payload")(payload.payload_gen)
+    app.command(name="exploits")(exp_mod.search_exploits)
+    app.command(name="payload")(pay_mod.payload_gen)
     
     # Network
-    app.command(name="wifi-audit")(wifi.wifi_audit)
-    app.command(name="wifi-stealer")(wifi.wifi_stealer)
+    app.command(name="wifi-audit")(wifi_mod.wifi_audit)
+    app.command(name="wifi-stealer")(wifi_mod.wifi_stealer)
     app.command(name="sniffer")(sniff_mod.sniffer)
-    app.command(name="arp-spoof")(arp.arp_spoof)
+    app.command(name="arp-spoof")(arp_mod.arp_spoof)
     
     # Reporting
-    app.command(name="html-report")(html.html_report)
-    app.command(name="phishing")(phishing.phishing_gen)
+    app.command(name="html-report")(html_mod.html_report)
+    app.command(name="phishing")(phish_mod.phishing_gen)
 
 
 # Try to register commands (will fail if tool modules not yet created)
