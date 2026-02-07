@@ -3,6 +3,7 @@
 typer>=0.9.0
 rich>=13.0.0
 python-dotenv>=1.0.0
+tenacity>=8.0.0
 
 # Database
 sqlmodel>=0.0.14
@@ -17,12 +18,11 @@ scapy>=2.5.0
 paramiko>=3.3.0
 beautifulsoup4>=4.12.0
 
-# OSINT
+# OSINT (phonenumbers is lightweight and stable)
 phonenumbers>=8.13.0
-maigret>=0.4.4
-holehe>=1.61
+# maigret and holehe installed on-demand via CLI
 
 # Utils
 Pillow>=10.0.0
-fpdf>=1.7.2
+reportlab>=4.0.0
 fake-useragent>=1.4.0

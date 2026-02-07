@@ -21,9 +21,13 @@ from rich.syntax import Syntax
 from rich.prompt import Confirm, Prompt
 
 from redai.core.display import display
-from redai.ai.client import get_client, get_model_name
+from redai.core.logger import get_logger
+from redai.ai.client import get_client, get_model_name, chat_completion
 from redai.ai.cortex import CortexMemory
 from redai.database.repository import save_scan, save_agent_step
+
+
+logger = get_logger("agent")
 
 
 console = Console()
@@ -196,8 +200,11 @@ def agent(project: str = "General", auto_approve: bool = False):
     
     client = get_client()
     if not client:
+        logger.error("No AI client configured - missing API key")
         display.error("No AI client configured. Check your .env file.")
         return
+    
+    logger.info(f"Agent started for project: {project}, auto_approve: {auto_approve}")
     
     memory = CortexMemory()
     conversation = [{"role": "system", "content": AGENT_SYSTEM_PROMPT}]
@@ -249,13 +256,17 @@ def agent(project: str = "General", auto_approve: bool = False):
                 # Step 1: THINK - Get AI response
                 console.print(f"\n[bold cyan]═══ STEP {step}: THINKING ═══[/bold cyan]")
                 
+                logger.info(f"Step {step}: Requesting AI response for objective: {user_input[:50]}")
+                
                 with console.status("[bold yellow]AI is thinking...[/bold yellow]"):
-                    response = client.chat.completions.create(
-                        model=get_model_name(),
-                        messages=conversation,
-                        temperature=0.7
-                    )
-                    ai_text = response.choices[0].message.content
+                    try:
+                        ai_text = chat_completion(conversation, temperature=0.7)
+                    except Exception as e:
+                        logger.error(f"AI request failed after retries: {e}")
+                        console.print(f"[red]Error calling AI: {e}[/red]")
+                        break
+                
+                logger.debug(f"AI response: {ai_text[:200]}...")
                 
                 # Parse JSON response
                 parsed = parse_ai_response(ai_text)

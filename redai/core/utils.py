@@ -4,15 +4,109 @@ Includes sudo management, AI analysis hooks, and system helpers.
 """
 
 import subprocess
+import shutil
 import os
 from typing import Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt
+from rich.prompt import Prompt, Confirm
+
+from redai.core.logger import get_logger
 
 
 console = Console()
+logger = get_logger("utils")
+
+
+def ensure_tool_installed(tool_name: str, pip_package: str = None) -> bool:
+    """
+    Verifica si una herramienta CLI está instalada. Si no, ofrece instalarla.
+    
+    Args:
+        tool_name: Nombre del comando CLI (ej: "maigret")
+        pip_package: Nombre del paquete pip (si es diferente al comando)
+    
+    Returns:
+        True si está disponible, False si el usuario rechazó instalar
+    """
+    pip_package = pip_package or tool_name
+    
+    # Verificar si el comando existe en PATH
+    if shutil.which(tool_name):
+        logger.debug(f"Tool {tool_name} is available")
+        return True
+    
+    # No está instalado, preguntar
+    console.print(f"\n[yellow]⚠️ {tool_name} no está instalado.[/yellow]")
+    logger.info(f"Tool {tool_name} not found, prompting for installation")
+    
+    if Confirm.ask(f"¿Instalar [cyan]{pip_package}[/cyan] ahora?", default=True):
+        console.print(f"[cyan]Instalando {pip_package}... (esto puede tardar)[/cyan]")
+        
+        try:
+            result = subprocess.run(
+                ["pip", "install", pip_package],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 min timeout
+            )
+            
+            if result.returncode == 0:
+                console.print(f"[green]✅ {pip_package} instalado correctamente[/green]")
+                logger.info(f"Successfully installed {pip_package}")
+                return True
+            else:
+                console.print(f"[red]❌ Error instalando: {result.stderr[:500]}[/red]")
+                logger.error(f"Failed to install {pip_package}: {result.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            console.print(f"[red]❌ Timeout instalando {pip_package}[/red]")
+            logger.error(f"Timeout installing {pip_package}")
+            return False
+        except Exception as e:
+            console.print(f"[red]❌ Error: {e}[/red]")
+            logger.error(f"Exception installing {pip_package}: {e}")
+            return False
+    
+    logger.info(f"User declined to install {pip_package}")
+    return False
+
+
+def run_cli_tool(tool_name: str, args: list, pip_package: str = None, timeout: int = 300) -> tuple:
+    """
+    Ejecuta una herramienta CLI, instalándola si es necesario.
+    
+    Args:
+        tool_name: Nombre del comando
+        args: Lista de argumentos
+        pip_package: Nombre del paquete pip
+        timeout: Timeout en segundos
+    
+    Returns:
+        Tuple (success: bool, output: str)
+    """
+    if not ensure_tool_installed(tool_name, pip_package):
+        return False, f"{tool_name} no está disponible"
+    
+    try:
+        logger.info(f"Running: {tool_name} {' '.join(args[:3])}...")
+        result = subprocess.run(
+            [tool_name] + args,
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        output = result.stdout + result.stderr
+        return True, output
+        
+    except subprocess.TimeoutExpired:
+        logger.warning(f"Command {tool_name} timed out")
+        return False, f"Timeout después de {timeout}s"
+    except Exception as e:
+        logger.error(f"Error running {tool_name}: {e}")
+        return False, str(e)
 
 # --- GLOBAL SUDO MANAGER ---
 SUDO_PASSWORD: Optional[str] = None
