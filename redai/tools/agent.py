@@ -10,7 +10,6 @@ from typing import Optional, Dict, Any
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
 from rich.syntax import Syntax
 
 from redai.core.display import display
@@ -163,7 +162,10 @@ def agent(project: str = "General", auto_approve: bool = False):
     while True:
         try:
             # Get user input
-            user_input = Prompt.ask("[bold red]🔴 Objective[/bold red]")
+            try:
+                user_input = input("\n🔴 Objective: ")
+            except EOFError:
+                break
             
             if not user_input.strip():
                 continue
@@ -223,9 +225,17 @@ def agent(project: str = "General", auto_approve: bool = False):
                     
                     # Confirm execution
                     if not auto_approve:
-                        if not Confirm.ask("Execute this command?", default=True):
+                        try:
+                            confirm = input("\n Execute this command? [Y/n]: ").strip().lower()
+                        except EOFError:
+                            confirm = "y"
+                        
+                        if confirm == "n":
                             console.print("[yellow]Skipped. Tell me what to do instead.[/yellow]")
-                            user_feedback = Prompt.ask("[cyan]Your input[/cyan]")
+                            try:
+                                user_feedback = input(" Your input: ")
+                            except EOFError:
+                                user_feedback = "skip"
                             conversation.append({"role": "user", "content": f"Usuario decidió no ejecutar. Feedback: {user_feedback}"})
                             continue
                     
@@ -274,7 +284,10 @@ def agent(project: str = "General", auto_approve: bool = False):
                     question = parsed.get("question", "")
                     console.print(Panel(question, title="❓ Agent Question", border_style="cyan"))
                     
-                    answer = Prompt.ask("[cyan]Your answer[/cyan]")
+                    try:
+                        answer = input(" Your answer: ")
+                    except EOFError:
+                        answer = "skip"
                     conversation.append({"role": "assistant", "content": ai_text})
                     conversation.append({"role": "user", "content": f"RESPUESTA: {answer}"})
                 
