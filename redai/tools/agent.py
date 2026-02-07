@@ -117,18 +117,43 @@ def parse_ai_response(response_text: str) -> Optional[Dict[str, Any]]:
 
 def execute_command(cmd: str, timeout: int = 120) -> str:
     """Ejecuta un comando en bash y devuelve el output."""
+    import signal
+    import os
+    
     try:
-        result = subprocess.run(
+        # Use Popen for better control
+        process = subprocess.Popen(
             cmd,
             shell=True,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout
+            preexec_fn=os.setsid if hasattr(os, 'setsid') else None
         )
-        output = result.stdout + result.stderr
-        return output if output else "(No output)"
-    except subprocess.TimeoutExpired:
-        return f"(Command timed out after {timeout}s)"
+        
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+            output = stdout + stderr
+            return output if output else "(No output)"
+        except subprocess.TimeoutExpired:
+            # Kill entire process group
+            try:
+                if hasattr(os, 'killpg'):
+                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                else:
+                    process.kill()
+            except:
+                pass
+            process.wait()
+            
+            # Reset terminal state
+            try:
+                os.system('stty sane 2>/dev/null')
+            except:
+                pass
+            
+            return f"(Command timed out after {timeout}s - process killed)"
+            
     except Exception as e:
         return f"(Error: {e})"
 
