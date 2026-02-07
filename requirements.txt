@@ -1,0 +1,28 @@
+# RedAI Dependencies
+# Core
+typer>=0.9.0
+rich>=13.0.0
+python-dotenv>=1.0.0
+
+# Database
+sqlmodel>=0.0.14
+
+# AI
+openai>=1.0.0
+
+# Network & Security
+requests>=2.31.0
+dnspython>=2.4.0
+scapy>=2.5.0
+paramiko>=3.3.0
+beautifulsoup4>=4.12.0
+
+# OSINT
+phonenumbers>=8.13.0
+maigret>=0.4.4
+holehe>=1.61
+
+# Utils
+Pillow>=10.0.0
+fpdf>=1.7.2
+fake-useragent>=1.4.0
