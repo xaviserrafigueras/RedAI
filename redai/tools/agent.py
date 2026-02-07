@@ -194,6 +194,9 @@ def agent(project: str = "General", auto_approve: bool = False):
     memory = CortexMemory()
     conversation = [{"role": "system", "content": AGENT_SYSTEM_PROMPT}]
     
+    # Session memory - persists across objectives
+    session_summary = []  # List of key findings/recommendations from this session
+    
     console.print("\n[bold green]Agent Ready.[/bold green]")
     console.print("[dim]Enter your objective. Type 'exit' to quit.[/dim]\n")
     
@@ -215,9 +218,17 @@ def agent(project: str = "General", auto_approve: bool = False):
             # Set objective in memory
             memory.set_objective(user_input)
             
-            # Reset conversation for new objective (keep only system prompt)
+            # Reset conversation but inject session context
             conversation = [{"role": "system", "content": AGENT_SYSTEM_PROMPT}]
-            conversation.append({"role": "user", "content": f"NUEVO OBJETIVO: {user_input}"})
+            
+            # Include session summary if we have previous findings
+            if session_summary:
+                context = "CONTEXTO DE SESIÓN (hallazgos y recomendaciones previas):\n"
+                context += "\n".join([f"- {s}" for s in session_summary[-10:]])  # Keep last 10 items
+                context += f"\n\nNUEVO OBJETIVO: {user_input}"
+                conversation.append({"role": "user", "content": context})
+            else:
+                conversation.append({"role": "user", "content": f"NUEVO OBJETIVO: {user_input}"})
             
             # Autonomous loop
             step = 0
@@ -291,6 +302,10 @@ def agent(project: str = "General", auto_approve: bool = False):
                     # Record in memory
                     memory.record_step(thought, cmd, output)
                     
+                    # Save scan info to session summary (for context in future objectives)
+                    if "nmap" in cmd.lower() or "scan" in cmd.lower():
+                        session_summary.append(f"[ESCANEO] Ejecutado: {cmd[:80]}")
+                    
                     # Save to DB
                     save_scan(
                         target=user_input[:50],
@@ -313,6 +328,9 @@ def agent(project: str = "General", auto_approve: bool = False):
                     if findings:
                         findings_text = "\n".join([f"• {f}" for f in findings])
                         console.print(Panel(findings_text, title="🔍 Findings", border_style="magenta"))
+                        # Save findings to session memory
+                        for f in findings:
+                            session_summary.append(f"[HALLAZGO] {f}")
                     
                     if next_step:
                         console.print(Panel(next_step, title="➡️ Next Step", border_style="cyan"))
@@ -344,6 +362,8 @@ def agent(project: str = "General", auto_approve: bool = False):
                     if commands:
                         cmd_text = "\n".join([f"  {cmd}" for cmd in commands])
                         console.print(Panel(cmd_text, title="💻 Comandos Sugeridos", border_style="green"))
+                        # Save suggested commands to session memory
+                        session_summary.append(f"[RECOMENDACIÓN] {title}: " + ", ".join(commands[:3]))
                     
                     # End the loop for this objective - explanation is complete
                     break
@@ -359,6 +379,9 @@ def agent(project: str = "General", auto_approve: bool = False):
                     if recommendations:
                         rec_text = "\n".join([f"• {r}" for r in recommendations])
                         console.print(Panel(rec_text, title="💡 Recommendations", border_style="yellow"))
+                        # Save recommendations to session memory
+                        for r in recommendations:
+                            session_summary.append(f"[RECOMENDACIÓN] {r}")
                     
                     break
                 
