@@ -78,8 +78,8 @@ def agent(project: str = "General", auto_approve: bool = False):
             
             # Display response
             if response:
-                role = response.get("role", "MANAGER")
-                content = response.get("response", "No response generated.")
+                role = response.get("role_name", "MANAGER")
+                content = response.get("content", "No response generated.")
                 
                 console.print(Panel(
                     content,
