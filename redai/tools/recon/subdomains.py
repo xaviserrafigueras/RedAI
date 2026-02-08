@@ -69,17 +69,29 @@ def _run_subfinder(domain: str, project: str):
     try:
         display.step(f"Usando Subfinder para {domain}...")
         
-        # Check if subfinder is installed
+        # Check if subfinder is installed, offer to install with apt
         if not shutil.which("subfinder"):
             console.print("\n[yellow]⚠️ Subfinder no está instalado.[/yellow]")
-            console.print("[dim]Instálalo con:[/dim]")
-            console.print("  [cyan]go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest[/cyan]")
-            console.print("  [dim]O en Kali:[/dim] [cyan]sudo apt install subfinder[/cyan]")
             
-            # Fallback to sublist3r
-            if Prompt.ask("\n¿Usar Sublist3r en su lugar?", choices=["y", "n"], default="y") == "y":
-                _run_sublist3r(domain, project)
-            return
+            if Prompt.ask("¿Instalar subfinder ahora? (requiere sudo)", choices=["y", "n"], default="y") == "y":
+                console.print("[cyan]Instalando subfinder...[/cyan]")
+                try:
+                    from redai.core.utils import run_sudo
+                    result = run_sudo(["apt", "install", "-y", "subfinder"])
+                    if result.returncode == 0:
+                        console.print("[green]✅ Subfinder instalado correctamente[/green]")
+                    else:
+                        console.print(f"[red]❌ Error instalando: {result.stderr}[/red]")
+                        console.print("[dim]Instálalo manualmente: sudo apt install subfinder[/dim]")
+                        return
+                except Exception as e:
+                    console.print(f"[red]❌ Error: {e}[/red]")
+                    return
+            else:
+                # Fallback to sublist3r
+                if Prompt.ask("¿Usar Sublist3r en su lugar?", choices=["y", "n"], default="y") == "y":
+                    _run_sublist3r(domain, project)
+                return
 
         cmd = ["subfinder", "-d", domain, "-silent"]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
