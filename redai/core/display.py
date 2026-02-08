@@ -245,9 +245,9 @@ class Display:
 ██║  ██║███████╗██████╔╝      ██║  ██║██║       ╚██████╗╚██████╔╝██║  ██║   ██║   ███████╗██╔╝ ██╗
 ╚═╝  ╚═╝╚══════╝╚═════╝       ╚═╝  ╚═╝╚═╝        ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 [/{self._theme.primary}]
-[{self._theme.accent}]⚡ v1.0 - Autonomous Pentesting Framework ⚡[/{self._theme.accent}]
+[{self._theme.accent}]                      ⚡ v1.0 - Autonomous Pentesting Framework ⚡[/{self._theme.accent}]
 
-[{self._theme.dim}]👤 Xavi Serra Figueras | GitHub: xaviserrafigueras | LinkedIn: xaviserrafigueras[/{self._theme.dim}]"""
+[{self._theme.dim}]     👤 Xavi Serra Figueras | GitHub: xaviserrafigueras | LinkedIn: xaviserrafigueras[/{self._theme.dim}]"""
         
         from rich.align import Align
         self.console.print(Panel(Align.center(ascii_art), border_style=self._theme.secondary))
