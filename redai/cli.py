@@ -102,8 +102,8 @@ def interactive_menu():
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         
-        # Banner Principal
-        display.header("RedAI v8.0 - Ultimate Pentest Suite", "Artificial Intelligence & Offensive Security")
+        # Banner Principal con ASCII Art
+        display.cyber_header()
         
         # Tabla de Menú
         menu = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold magenta", expand=True)
