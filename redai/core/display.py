@@ -249,7 +249,8 @@ class Display:
 
 [{self._theme.dim}]                    👤 Xavi Serra Figueras | GitHub: xaviserrafigueras | LinkedIn: xaviserrafigueras[/{self._theme.dim}]"""
         
-        self.console.print(Panel(ascii_art, border_style=self._theme.secondary))
+        from rich.align import Align
+        self.console.print(Panel(Align.center(ascii_art), border_style=self._theme.secondary))
 
     def print_hud(self, memory: Any):
         """Print HUD with memory context (placeholder for future implementation)."""
