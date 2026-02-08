@@ -81,7 +81,7 @@ def json_report(project: str, filename: str = None, auto: bool = False) -> Optio
     for record in records:
         report["scans"].append({
             "target": record.target,
-            "scan_type": record.scan_type,
+            "scan_type": record.command_type,
             "result": record.result[:2000] if record.result else None,  # Truncate
             "timestamp": record.timestamp.isoformat() if record.timestamp else None
         })
