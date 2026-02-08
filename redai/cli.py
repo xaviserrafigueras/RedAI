@@ -105,72 +105,67 @@ def interactive_menu():
         # Banner Principal con ASCII Art
         display.cyber_header()
         
-        console.print()  # Espaciado
-        
-        # Tabla de Menú - mejor organizado
-        menu = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta", expand=True, padding=(0, 1))
-        menu.add_column("🔍 RECON", style="cyan", justify="left")
-        menu.add_column("⚔️ EXPLOIT", style="red", justify="left")
-        menu.add_column("🌐 NETWORK", style="green", justify="left")
-        menu.add_column("🕵️ OSINT", style="yellow", justify="left")
+        # Tabla de Menú
+        menu = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold magenta", expand=True)
+        menu.add_column("🔍 Recon", style="cyan")
+        menu.add_column("⚔️ Exploit", style="red")
+        menu.add_column("🌐 Network", style="green")
+        menu.add_column("🕵️ OSINT", style="yellow")
         
         menu.add_row(
-            "[cyan]1.[/cyan] Nmap Scanner", 
-            "[red]5.[/red] SQL Injection",
-            "[green]10.[/green] Msfvenom Payloads",
-            "[yellow]14.[/yellow] Exif Spy"
+            "1. Nmap Scanner", 
+            "5. SQL Injection",
+            "10. Msfvenom Payloads",
+            "14. Exif Spy"
         )
         menu.add_row(
-            "[cyan]2.[/cyan] Shodan Intel", 
-            "[red]6.[/red] XSS Scanner", 
-            "[green]11.[/green] Hash Cracker",
-            "[yellow]15.[/yellow] Username Recon"
+            "2. Shodan Intel", 
+            "6. XSS Scanner", 
+            "11. Hash Cracker",
+            "15. Username Recon"
         )
         menu.add_row(
-            "[cyan]3.[/cyan] Subdomains", 
-            "[red]7.[/red] Fuzzing Web", 
-            "[green]12.[/green] HTML Report",
-            "[yellow]16.[/yellow] Phone OSINT"
+            "3. Subdomains", 
+            "7. Fuzzing Web", 
+            "12. HTML Report",
+            "16. Phone OSINT"
         )
         menu.add_row(
-            "[cyan]4.[/cyan] WordPress Scan", 
-            "[red]8.[/red] SearchSploit", 
-            "[green]13.[/green] Wi-Fi Auditor",
-            "[yellow]17.[/yellow] Google Dorks"
-        )
-        menu.add_row(
-            "",
-            "[red]9.[/red] Brute Force",
-            "[green]20.[/green] Network Sniffer",
-            "[yellow]18.[/yellow] Metadata FOCA"
+            "4. WordPress Scan", 
+            "8. SearchSploit", 
+            "13. Wi-Fi Auditor",
+            "17. Google Dorks"
         )
         menu.add_row(
             "",
-            "[red]22.[/red] Subdomain Takeover",
-            "[green]21.[/green] ARP Poison",
-            "[yellow]19.[/yellow] TheHarvester"
+            "9. Brute Force",
+            "20. Network Sniffer",
+            "18. Metadata FOCA"
         )
         menu.add_row(
             "",
-            "[red]23.[/red] Phishing Templates",
-            "[green]24.[/green] Network Scanner",
+            "22. Subdomain Takeover",
+            "21. ARP Poison",
+            "19. TheHarvester"
+        )
+        menu.add_row(
+            "",
+            "23. Phishing Templates",
+            "24. Network Scanner",
             ""
         )
         menu.add_row(
             "",
-            "[red]26.[/red] Wi-Fi Dump",
+            "26. Wi-Fi Dump",
             "",
             ""
         )
         console.print(menu)
         
-        console.print()  # Espaciado
-        
         # Special AI Option
         console.print(Panel(
-            Align.center("[bold red]🧠  99. RED AI CORTEX - Autonomous Agent  🧠[/bold red]"),
-            border_style="red",
-            padding=(0, 2)
+            Align.center("[bold red]🧠 99. RED AI CORTEX (Autonomous Agent) 🧠[/bold red]"),
+            border_style="red"
         ))
 
         console.print("\n[dim]Select an option number... (0 to exit)[/dim]")

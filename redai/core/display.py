@@ -236,27 +236,24 @@ class Display:
         if self._mode == OutputMode.QUIET:
             return
         
-        # ASCII Art banner - centrado y más grande
+        # ASCII Art banner - letras más grandes
         ascii_art = f"""
 [{self._theme.primary}]
-██████╗ ███████╗██████╗      █████╗ ██╗
-██╔══██╗██╔════╝██╔══██╗    ██╔══██╗██║
-██████╔╝█████╗  ██║  ██║    ███████║██║
-██╔══██╗██╔══╝  ██║  ██║    ██╔══██║██║
-██║  ██║███████╗██████╔╝    ██║  ██║██║
-╚═╝  ╚═╝╚══════╝╚═════╝     ╚═╝  ╚═╝╚═╝
+ ██████╗  ███████╗ ██████╗        █████╗  ██╗
+ ██╔══██╗ ██╔════╝ ██╔══██╗      ██╔══██╗ ██║
+ ██████╔╝ █████╗   ██║  ██║      ███████║ ██║
+ ██╔══██╗ ██╔══╝   ██║  ██║      ██╔══██║ ██║
+ ██║  ██║ ███████╗ ██████╔╝      ██║  ██║ ██║
+ ╚═╝  ╚═╝ ╚══════╝ ╚═════╝       ╚═╝  ╚═╝ ╚═╝
 [/{self._theme.primary}]
-[{self._theme.accent}]═══════════════════════════════════════════════════════════════[/{self._theme.accent}]
-[{self._theme.accent}]                    ⚡ CORTEX v1.0 ⚡[/{self._theme.accent}]
-[{self._theme.dim}]              Autonomous Pentesting Framework[/{self._theme.dim}]
-[{self._theme.accent}]═══════════════════════════════════════════════════════════════[/{self._theme.accent}]
+[{self._theme.accent}]              ⚡ CORTEX v1.0 ⚡[/{self._theme.accent}]
+[{self._theme.dim}]        Autonomous Pentesting Framework[/{self._theme.dim}]
 
-[{self._theme.accent}]                  👤 Xavi Serra Figueras[/{self._theme.accent}]
-[{self._theme.dim}]           GitHub: github.com/xaviserrafigueras[/{self._theme.dim}]
-[{self._theme.dim}]        LinkedIn: linkedin.com/in/xaviserrafigueras[/{self._theme.dim}]
+[{self._theme.accent}]           👤 Xavi Serra Figueras[/{self._theme.accent}]
+[{self._theme.dim}]     GitHub: github.com/xaviserrafigueras[/{self._theme.dim}]
+[{self._theme.dim}]  LinkedIn: linkedin.com/in/xaviserrafigueras[/{self._theme.dim}]
 """
-        from rich.align import Align
-        self.console.print(Panel(Align.center(ascii_art), border_style=self._theme.secondary, padding=(1, 2)))
+        self.console.print(Panel(ascii_art, border_style=self._theme.secondary))
 
     def print_hud(self, memory: Any):
         """Print HUD with memory context (placeholder for future implementation)."""
