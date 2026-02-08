@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from redai.core.display import display
-from redai.core.utils import suggest_ai_analysis
+from redai.core.utils import suggest_ai_analysis, ensure_tool_installed
 from redai.database.repository import save_scan
 
 
@@ -24,12 +24,11 @@ def subdomains(domain: str, project: str = "General", auto: bool = False):
     try:
         display.step(f"Searching subdomains for {domain}...")
         
-        tool = "sublist3r"
-        if not shutil.which(tool):
-            display.error("Sublist3r not found. Install: pip install sublist3r")
+        # Check and offer to install if missing
+        if not ensure_tool_installed("sublist3r", "sublist3r"):
             return
 
-        cmd = [tool, "-d", domain, "-t", "10", "-n"]
+        cmd = ["sublist3r", "-d", domain, "-t", "10", "-n"]
         proc = subprocess.run(cmd, capture_output=True, text=True)
         
         output = proc.stdout + proc.stderr

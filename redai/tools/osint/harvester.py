@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from redai.core.display import display
-from redai.core.utils import suggest_ai_analysis
+from redai.core.utils import suggest_ai_analysis, ensure_tool_installed
 from redai.database.repository import save_scan
 
 
@@ -21,9 +21,8 @@ def harvester_scan(domain: str, limit: int = 500, project: str = "General", auto
     """Recolector de emails y subdominios (TheHarvester)."""
     display.header("TheHarvester: Email & Subdomain OSINT", domain)
     
-    if not shutil.which("theHarvester"):
-        display.warning("theHarvester is not installed or not in PATH.")
-        display.info("Install: sudo apt install theharvester (Kali) or via pip.")
+    # Check and offer to install if missing
+    if not ensure_tool_installed("theHarvester", "theHarvester"):
         return
 
     try:

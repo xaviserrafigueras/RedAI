@@ -141,8 +141,8 @@ def markdown_report(project: str, filename: str = None, auto: bool = False) -> O
         md_lines.append("|--------|------|-----------|")
         
         for record in records[:20]:  # Limit to 20
-            timestamp = record.created_at.strftime('%Y-%m-%d %H:%M') if record.created_at else "N/A"
-            md_lines.append(f"| `{record.target}` | {record.scan_type} | {timestamp} |")
+            timestamp = record.timestamp.strftime('%Y-%m-%d %H:%M') if record.timestamp else "N/A"
+            md_lines.append(f"| `{record.target}` | {record.command_type} | {timestamp} |")
         
         if len(records) > 20:
             md_lines.append(f"| ... | *{len(records) - 20} more* | ... |")
