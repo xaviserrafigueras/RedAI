@@ -4,6 +4,7 @@ Main entry point for the application with Typer commands.
 """
 
 import os
+import platform
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -12,8 +13,28 @@ from rich import box
 from rich.prompt import Prompt
 from rich.align import Align
 
-from redai.core.display import display
+from redai.core.display import display, Display
 from redai.database.repository import init_db
+
+
+def check_os_compatibility():
+    """Check if running on Linux/Kali and show warning if not."""
+    system = platform.system()
+    
+    if system != "Linux":
+        console = Console()
+        console.print()
+        console.print(Panel(
+            f"[bold yellow]⚠️  RedAI está diseñado para [cyan]Kali Linux[/cyan][/bold yellow]\n\n"
+            f"Sistema detectado: [red]{system}[/red]\n\n"
+            f"Algunas herramientas (nmap, gobuster, sqlmap, etc.) pueden no funcionar.\n"
+            f"Para la mejor experiencia, ejecuta RedAI en Kali Linux o usa Docker.",
+            title="[bold yellow]Aviso de Compatibilidad[/bold yellow]",
+            border_style="yellow"
+        ))
+        console.print()
+        return False
+    return True
 
 # Create Typer app
 app = typer.Typer(
@@ -26,8 +47,28 @@ console = Console()
 
 
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Minimal output (only errors and results)"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Debug output (show all details)"),
+    theme: str = typer.Option(None, "--theme", "-t", help="Color theme: default, matrix, ocean, purple, minimal")
+):
     """RedAI - Ultimate Pentest Suite with AI"""
+    # Set output mode based on flags
+    if quiet:
+        Display.set_quiet()
+    elif verbose:
+        Display.set_verbose()
+    else:
+        Display.set_normal()
+    
+    # Set color theme (only if specified)
+    if theme:
+        Display.set_theme(theme)
+    
+    # Check OS compatibility (show warning if not Linux)
+    check_os_compatibility()
+    
     init_db()
     if ctx.invoked_subcommand is None:
         interactive_menu()
@@ -188,6 +229,12 @@ def interactive_menu():
             elif choice == "12":
                 display.tool_info("html")
                 html_report(project=project)
+            elif choice == "28":
+                from redai.tools.reporting.json_report import json_report
+                json_report(project=project)
+            elif choice == "29":
+                from redai.tools.reporting.markdown import markdown_report
+                markdown_report(project=project)
             elif choice == "99" or choice == "13":
                 display.tool_info("agent")
                 from redai.tools.agent import agent

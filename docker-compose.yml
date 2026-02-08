@@ -1,0 +1,54 @@
+# RedAI Docker Compose Configuration
+# Usage: docker-compose up -d
+
+services:
+  redai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: redai:latest
+    container_name: redai
+
+    # Interactive mode (needed for CLI)
+    stdin_open: true
+    tty: true
+
+    # Mount volumes for persistence
+    volumes:
+      - ./logs:/app/logs # Logs persist outside container
+      - ./reports:/app/reports # Reports persist outside container
+      - ./database.db:/app/database.db # Database persists
+
+    # Environment variables
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}
+      - AI_MODEL=${AI_MODEL:-gpt-4}
+
+    # Network mode: host allows scanning local network
+    # Change to 'bridge' if you only scan external targets
+    network_mode: host
+
+    # Security: run as root for network scanning capabilities
+    # Required for nmap SYN scans, ARP scanning, etc.
+    privileged: true
+
+    # Restart policy
+    restart: unless-stopped
+
+# Alternative: non-privileged mode (limited scanning)
+# Uncomment below and comment the service above if you don't need root
+
+# services:
+#   redai-limited:
+#     build: .
+#     image: redai:latest
+#     stdin_open: true
+#     tty: true
+#     volumes:
+#       - ./logs:/app/logs
+#       - ./reports:/app/reports
+#     environment:
+#       - OPENAI_API_KEY=${OPENAI_API_KEY}
+#     network_mode: bridge
+#     # No privileged mode - limited scanning capabilities

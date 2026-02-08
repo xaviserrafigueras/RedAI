@@ -1,0 +1,128 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#                           RedAI Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+# This is the main configuration file for RedAI.
+# Copy this file to config.yaml and customize as needed.
+# Environment variables can override these settings.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AI Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+ai:
+  # API Key - RECOMMENDED: Set via OPENAI_API_KEY environment variable instead
+  # api_key: "your-api-key-here"
+  
+  # Base URL for the AI API (OpenAI, DeepSeek, Local LLM, etc.)
+  base_url: "https://api.deepseek.com/v1"
+  
+  # Model to use for AI completions
+  model: "deepseek-chat"
+  
+  # Temperature (0.0 = deterministic, 1.0 = creative)
+  temperature: 0.7
+  
+  # Maximum tokens per response
+  max_tokens: 4000
+  
+  # Retry configuration for API calls
+  retry:
+    max_attempts: 3
+    min_wait: 2      # seconds
+    max_wait: 30     # seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Agent Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+agent:
+  # Maximum steps per objective (prevents infinite loops)
+  max_steps: 20
+  
+  # Command execution timeout in seconds
+  command_timeout: 120
+  
+  # Auto-approve command execution (DANGEROUS - use with caution!)
+  auto_approve: false
+  
+  # Maximum history messages to keep in context
+  max_history: 15
+  
+  # Default project name for scans
+  default_project: "General"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+  # Directory for log files
+  logs: "./logs"
+  
+  # Directory for generated reports
+  reports: "./reports"
+  
+  # SQLite database file
+  database: "./database.db"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# External APIs (Optional)
+# ─────────────────────────────────────────────────────────────────────────────
+# RECOMMENDED: Set these via environment variables for security
+apis:
+  # BreachDirectory API for email breach checking
+  # breachdirectory_api_key: ""
+  
+  # Shodan API for device scanning
+  # shodan_api_key: ""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tool Defaults
+# ─────────────────────────────────────────────────────────────────────────────
+# Default arguments for common security tools
+tools:
+  nmap:
+    default_args: "-sV -sC"
+    timeout: 300
+  
+  gobuster:
+    wordlist: "/usr/share/wordlists/dirb/common.txt"
+    timeout: 600
+  
+  nikto:
+    default_args: "-Tuning x 6"
+    timeout: 600
+  
+  sqlmap:
+    default_args: "--batch --random-agent"
+    timeout: 900
+  
+  hydra:
+    timeout: 1800
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Logging Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log to file
+  file_enabled: true
+  
+  # Log to console (only warnings and above)
+  console_enabled: true
+  
+  # Keep logs for N days (0 = forever)
+  retention_days: 30
+
+# ─────────────────────────────────────────────────────────────────────────────
+# UI Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+ui:
+  # Show banner on startup
+  show_banner: true
+  
+  # Color theme: "default", "minimal", "matrix"
+  theme: "default"
+  
+  # Verbose output (show debug messages)
+  verbose: false

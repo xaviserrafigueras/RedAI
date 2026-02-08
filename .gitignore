@@ -1,37 +1,154 @@
-# Environment
+# RedAI .gitignore
+# Comprehensive gitignore for Python/Pentesting project
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECRETS & SENSITIVE DATA
+# ═══════════════════════════════════════════════════════════════════════════
 .env
-*.pyc
-__pycache__/
-*.pyo
-*.pyd
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+credentials/
 
-# Virtual environment
-venv/
-env/
-.venv/
-
-# Database
+# ═══════════════════════════════════════════════════════════════════════════
+# DATABASE
+# ═══════════════════════════════════════════════════════════════════════════
 *.db
 *.sqlite
+*.sqlite3
 database.db
 
-# IDE
-.vscode/
+# ═══════════════════════════════════════════════════════════════════════════
+# LOGS & REPORTS
+# ═══════════════════════════════════════════════════════════════════════════
+logs/
+*.log
+reports/
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PYTHON
+# ═══════════════════════════════════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+pip-selfcheck.json
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TESTING & COVERAGE
+# ═══════════════════════════════════════════════════════════════════════════
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ═══════════════════════════════════════════════════════════════════════════
+# IDE & EDITORS
+# ═══════════════════════════════════════════════════════════════════════════
 .idea/
+.vscode/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# ═══════════════════════════════════════════════════════════════════════════
+# OS GENERATED
+# ═══════════════════════════════════════════════════════════════════════════
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Logs
-*.log
-
-# Generated files
-*.html
-!redai/tools/reporting/*.py
-
-# Temporary
-tmp/
+# ═══════════════════════════════════════════════════════════════════════════
+# SCAN RESULTS & OSINT OUTPUT
+# ═══════════════════════════════════════════════════════════════════════════
+*.tmp
+*.temp
+*.bak
+*.cache
+.cache/
 temp/
+tmp/
+
+# Maigret/OSINT output
+report_*.json
+report_*.html
+report_*.txt
+report_*.csv
+
+# Nmap output
+*.nmap
+*.gnmap
+*.xml
+
+# SQLMap output
+sqlmap_output/
+
+# Gobuster output
+gobuster_*.txt
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DOCKER
+# ═══════════════════════════════════════════════════════════════════════════
+.docker/
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MISC
+# ═══════════════════════════════════════════════════════════════════════════
+*.pid
+*.seed
+*.pid.lock
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KEEP THESE FILES (examples/templates)
+# ═══════════════════════════════════════════════════════════════════════════
+!.env.example
+!config.example.yaml

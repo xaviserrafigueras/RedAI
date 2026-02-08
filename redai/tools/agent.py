@@ -144,12 +144,17 @@ def execute_command(cmd: str, timeout: int = 120) -> str:
     """Ejecuta un comando en bash y devuelve el output."""
     import signal
     import os
+    import shlex
     
     try:
+        # Parse command string into list for security (avoids shell injection)
+        # Use shell=False for safer execution
+        cmd_list = shlex.split(cmd)
+        
         # Use Popen for better control
         process = subprocess.Popen(
-            cmd,
-            shell=True,
+            cmd_list,
+            shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
