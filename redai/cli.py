@@ -157,7 +157,13 @@ def interactive_menu():
         menu.add_row(
             "",
             "26. Wi-Fi Dump",
+            "28. JSON Report",
+            ""
+        )
+        menu.add_row(
             "",
+            "",
+            "29. Markdown Report",
             ""
         )
         console.print(menu)
