@@ -1,6 +1,7 @@
 """
 RedAI CLI - Command Line Interface
 Main entry point for the application with Typer commands.
+Refactored to use data-driven menu system.
 """
 
 import os
@@ -14,6 +15,13 @@ from rich.prompt import Prompt
 from rich.align import Align
 
 from redai.core.display import display, Display
+from redai.core.menu import (
+    MENU_OPTIONS, 
+    get_option_by_id, 
+    get_options_by_category,
+    CATEGORY_CONFIG
+)
+from redai.core.handlers import HANDLERS
 from redai.database.repository import init_db
 
 
@@ -35,6 +43,7 @@ def check_os_compatibility():
         console.print()
         return False
     return True
+
 
 # Create Typer app
 app = typer.Typer(
@@ -74,30 +83,40 @@ def main(
         interactive_menu()
 
 
+def render_menu_table():
+    """Render the menu table from MENU_OPTIONS data."""
+    menu = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold magenta", expand=True)
+    
+    # Add columns for each category
+    categories = ["recon", "exploit", "network", "osint", "reporting"]
+    for cat in categories:
+        config = CATEGORY_CONFIG.get(cat, {})
+        emoji = config.get("emoji", "")
+        name = config.get("name", cat.title())
+        style = config.get("style", "white")
+        menu.add_column(f"{emoji} {name}", style=style)
+    
+    # Get max items per category
+    cat_options = {cat: get_options_by_category(cat) for cat in categories}
+    max_rows = max(len(opts) for opts in cat_options.values())
+    
+    # Build rows
+    for i in range(max_rows):
+        row = []
+        for cat in categories:
+            opts = cat_options[cat]
+            if i < len(opts):
+                opt = opts[i]
+                row.append(f"{opt.id}. {opt.name}")
+            else:
+                row.append("")
+        menu.add_row(*row)
+    
+    return menu
+
+
 def interactive_menu():
-    """Main interactive menu for RedAI."""
-    # Import tools here to avoid circular imports
-    from redai.tools.recon.nmap import scan, net_scan
-    from redai.tools.recon.subdomains import subdomains, sub_takeover
-    from redai.tools.recon.fuzzing import fuzz
-    from redai.tools.recon.wordpress import wp_scan
-    from redai.tools.recon.shodan import shodan_scan
-    from redai.tools.osint.username import username_osint
-    from redai.tools.osint.phone import phone_osint
-    from redai.tools.osint.dorks import dork_gen
-    from redai.tools.osint.metadata import metadata_scan, exif_scan
-    from redai.tools.osint.harvester import harvester_scan
-    from redai.tools.exploit.sqli import sqli
-    from redai.tools.exploit.xss import xss
-    from redai.tools.exploit.bruteforce import brute
-    from redai.tools.exploit.crack import crack
-    from redai.tools.exploit.exploits import search_exploits
-    from redai.tools.exploit.payload import payload_gen
-    from redai.tools.network.wifi import wifi_audit, wifi_stealer
-    from redai.tools.network.sniffer import sniffer
-    from redai.tools.network.arp import arp_spoof
-    from redai.tools.reporting.html import html_report
-    from redai.tools.reporting.phishing import phishing_gen
+    """Main interactive menu for RedAI - Data-driven version."""
     
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -105,67 +124,8 @@ def interactive_menu():
         # Banner Principal con ASCII Art
         display.cyber_header()
         
-        # Tabla de Menú
-        menu = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold magenta", expand=True)
-        menu.add_column("🔍 Recon", style="cyan")
-        menu.add_column("⚔️ Exploit", style="red")
-        menu.add_column("🌐 Network", style="green")
-        menu.add_column("🕵️ OSINT", style="yellow")
-        
-        menu.add_row(
-            "1. Nmap Scanner", 
-            "5. SQL Injection",
-            "10. Msfvenom Payloads",
-            "14. Exif Spy"
-        )
-        menu.add_row(
-            "2. Shodan Intel", 
-            "6. XSS Scanner", 
-            "11. Hash Cracker",
-            "15. Username Recon"
-        )
-        menu.add_row(
-            "3. Subdomains", 
-            "7. Fuzzing Web", 
-            "12. HTML Report",
-            "16. Phone OSINT"
-        )
-        menu.add_row(
-            "4. WordPress Scan", 
-            "8. SearchSploit", 
-            "13. Wi-Fi Auditor",
-            "17. Google Dorks"
-        )
-        menu.add_row(
-            "",
-            "9. Brute Force",
-            "20. Network Sniffer",
-            "18. Metadata FOCA"
-        )
-        menu.add_row(
-            "",
-            "22. Subdomain Takeover",
-            "21. ARP Poison",
-            "19. TheHarvester"
-        )
-        menu.add_row(
-            "",
-            "23. Phishing Templates",
-            "24. Network Scanner",
-            ""
-        )
-        menu.add_row(
-            "",
-            "26. Wi-Fi Dump",
-            "28. JSON Report",
-            ""
-        )
-        menu.add_row(
-            "",
-            "",
-            "29. Markdown Report",
-            ""
-        )
+        # Render menu from data
+        menu = render_menu_table()
         console.print(menu)
         
         # Special AI Option
@@ -182,129 +142,43 @@ def interactive_menu():
             console.print("[red]Saliendo...[/red]")
             break
         
+        # Get option from registry
+        option = get_option_by_id(choice)
+        
+        if not option:
+            display.error("Invalid Option")
+            Prompt.ask("\n[dim]Press Enter to continue...[/dim]")
+            continue
+        
         # Project Selection
         project = Prompt.ask("[blue]Project Name[/blue]", default="General")
         
-        # --- Menu Options Logic ---
-        try:
-            if choice == "1":
-                display.tool_info("nmap")
-                target = Prompt.ask("Target IP")
-                scan(target=target, project=project, aggressive=True)
-            elif choice == "2":
-                display.tool_info("shodan")
-                ip = Prompt.ask("IP for Shodan")
-                shodan_scan(ip=ip, project=project)
-            elif choice == "3":
-                display.tool_info("subdomains")
-                domain = Prompt.ask("Domain")
-                subdomains(domain=domain, project=project)
-            elif choice == "4":
-                display.tool_info("wordpress")
-                url = Prompt.ask("WordPress URL")
-                wp_scan(url=url, project=project)
-            elif choice == "5":
-                display.tool_info("sqli")
-                url = Prompt.ask("Vulnerable URL")
-                sqli(url=url, project=project)
-            elif choice == "6":
-                display.tool_info("xss")
-                url = Prompt.ask("Target URL (XSS)")
-                xss(url=url, project=project)
-            elif choice == "7":
-                display.tool_info("fuzz")
-                url = Prompt.ask("Base URL")
-                fuzz(url=url, project=project)
-            elif choice == "8":
-                display.tool_info("searchsploit")
-                term = Prompt.ask("Search Term")
-                search_exploits(query=term, project=project)
-            elif choice == "9":
-                display.tool_info("brute")
-                target = Prompt.ask("Target IP")
-                user = Prompt.ask("Username", default="root")
-                brute(target=target, user=user, project=project)
-            elif choice == "10":
-                display.tool_info("msfvenom")
-                payload_gen(project=project)
-            elif choice == "11":
-                display.tool_info("hash")
-                h = Prompt.ask("Hash to Crack")
-                crack(hash_str=h, project=project)
-            elif choice == "12":
-                display.tool_info("html")
-                html_report(project=project)
-            elif choice == "28":
-                from redai.tools.reporting.json_report import json_report
-                json_report(project=project)
-            elif choice == "29":
-                from redai.tools.reporting.markdown import markdown_report
-                markdown_report(project=project)
-            elif choice == "13":
-                display.tool_info("wifi")
-                iface = Prompt.ask("Wireless Interface", default="wlan0")
-                wifi_audit(interface=iface, project=project)
-            elif choice == "99":
-                display.tool_info("agent")
-                from redai.tools.agent import agent
-                auto = typer.confirm("Enable Autonomous Mode?")
-                agent(project=project, auto_approve=auto)
-            elif choice == "14":
-                display.tool_info("exif")
-                img = Prompt.ask("Path to Image")
-                exif_scan(image_path=img, project=project)
-            elif choice == "15":
-                display.tool_info("maigret")
-                u = Prompt.ask("Username")
-                username_osint(username=u, project=project)
-            elif choice == "16":
-                display.tool_info("phone")
-                num = Prompt.ask("Phone Number (+1...)")
-                phone_osint(number=num, project=project)
-            elif choice == "17":
-                display.tool_info("dorks")
-                tgt = Prompt.ask("Target Domain")
-                dork_gen(target=tgt, project=project)
-            elif choice == "18":
-                display.tool_info("metadata")
-                fpath = Prompt.ask("File Path")
-                metadata_scan(filepath=fpath, project=project)
-            elif choice == "19":
-                display.tool_info("harvester")
-                dom = Prompt.ask("Target Domain")
-                harvester_scan(domain=dom, project=project)
-            elif choice == "20":
-                display.tool_info("wifi")
-                iface = Prompt.ask("Wireless Interface", default="wlan0")
-                wifi_audit(interface=iface, project=project)
-            elif choice == "21":
-                display.tool_info("sniffer")
-                iface = Prompt.ask("Network Interface", default="eth0")
-                pkt = Prompt.ask("Packets to capture", default="50")
-                sniffer(interface=iface, count=int(pkt), project=project)
-            elif choice == "22":
-                display.tool_info("takeover")
-                dom = Prompt.ask("Target Subdomain")
-                sub_takeover(domain=dom, project=project)
-            elif choice == "23":
-                display.tool_info("phishing")
-                console.print("[cyan]Templates: google, microsoft, netflix, paypal[/cyan]")
-                tmpl = Prompt.ask("Select Template", default="google")
-                phishing_gen(template=tmpl, project=project)
-            elif choice == "24":
-                display.tool_info("arp")
-                target = Prompt.ask("Target IP (Victim)")
-                gateway = Prompt.ask("Gateway IP (Router)")
-                mode = Prompt.ask("Mode", choices=["mitm", "kick"], default="mitm")
-                arp_spoof(target_ip=target, gateway_ip=gateway, kick=(mode == "kick"), project=project)
-            elif choice == "26":
-                wifi_stealer(project=project)
-            elif choice == "27":
-                net = Prompt.ask("Subnet to scan", default="192.168.1.0/24")
-                net_scan(target=net, project=project)
+        # Show tool info
+        display.tool_info(option.tool_key)
+        
+        # Collect prompts dynamically
+        kwargs = {"project": project}
+        for prompt_config in option.prompts:
+            if prompt_config.choices:
+                console.print(f"[cyan]Options: {', '.join(prompt_config.choices)}[/cyan]")
+                kwargs[prompt_config.name] = Prompt.ask(
+                    prompt_config.label,
+                    default=prompt_config.default,
+                    choices=prompt_config.choices
+                )
             else:
-                display.error("Invalid Option")
-                
+                kwargs[prompt_config.name] = Prompt.ask(
+                    prompt_config.label,
+                    default=prompt_config.default
+                )
+        
+        # Execute handler
+        try:
+            handler = HANDLERS.get(option.handler)
+            if handler:
+                handler(**kwargs)
+            else:
+                display.error(f"Handler not found: {option.handler}")
         except Exception as e:
             display.error(f"Runtime Error: {e}")
             
