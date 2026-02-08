@@ -240,7 +240,11 @@ def interactive_menu():
             elif choice == "29":
                 from redai.tools.reporting.markdown import markdown_report
                 markdown_report(project=project)
-            elif choice == "99" or choice == "13":
+            elif choice == "13":
+                display.tool_info("wifi")
+                iface = Prompt.ask("Wireless Interface", default="wlan0")
+                wifi_audit(interface=iface, project=project)
+            elif choice == "99":
                 display.tool_info("agent")
                 from redai.tools.agent import agent
                 auto = typer.confirm("Enable Autonomous Mode?")
