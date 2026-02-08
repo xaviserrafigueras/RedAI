@@ -90,9 +90,9 @@ def json_report(project: str, filename: str = None, auto: bool = False) -> Optio
     if not filename:
         filename = f"{project}_report.json"
     
-    # Ensure reports directory exists
-    reports_dir = Path("reports")
-    reports_dir.mkdir(exist_ok=True)
+    # Ensure reports/project directory exists
+    reports_dir = Path("reports") / project
+    reports_dir.mkdir(parents=True, exist_ok=True)
     
     output_path = reports_dir / filename
     
