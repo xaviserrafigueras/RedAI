@@ -72,7 +72,7 @@ def json_report(project: str, filename: str = None, auto: bool = False) -> Optio
             "explanation": step.explanation,
             "findings": step.findings.split("\n") if step.findings else [],
             "recommendations": step.recommendations.split("\n") if step.recommendations else [],
-            "timestamp": step.created_at.isoformat() if step.created_at else None
+            "timestamp": step.timestamp.isoformat() if step.timestamp else None
         })
     
     report["objectives"] = list(objectives_dict.values())
@@ -83,7 +83,7 @@ def json_report(project: str, filename: str = None, auto: bool = False) -> Optio
             "target": record.target,
             "scan_type": record.scan_type,
             "result": record.result[:2000] if record.result else None,  # Truncate
-            "timestamp": record.created_at.isoformat() if record.created_at else None
+            "timestamp": record.timestamp.isoformat() if record.timestamp else None
         })
     
     # Generate filename
