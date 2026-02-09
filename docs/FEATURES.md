@@ -524,14 +524,25 @@ SHODAN_API_KEY=...
 BREACHDIRECTORY_API_KEY=...
 ```
 
-### Proveedores de IA Soportados
+### Proveedores de IA Soportados (Multi-Provider)
 
-| Proveedor | AI_BASE_URL | Modelos |
-|-----------|-------------|---------|
-| OpenAI | `https://api.openai.com/v1` | gpt-4, gpt-3.5-turbo |
-| DeepSeek | `https://api.deepseek.com/v1` | deepseek-chat |
-| LM Studio | `http://localhost:1234/v1` | Cualquier modelo local |
-| Ollama | `http://localhost:11434/v1` | llama2, mixtral, etc. |
+RedAI soporta múltiples proveedores de IA con configuración simplificada:
+
+| Proveedor | Variable .env | Modelos | Notas |
+|-----------|---------------|---------|-------|
+| **OpenAI** | `OPENAI_API_KEY` | gpt-4o-mini, gpt-4, gpt-3.5-turbo | Default |
+| **DeepSeek** | `DEEPSEEK_API_KEY` | deepseek-chat, deepseek-coder | Más barato |
+| **Claude** | `CLAUDE_API_KEY` | claude-3-haiku, claude-3-sonnet | Anthropic |
+| **Ollama** | (none) | llama3, mistral, codellama | Local y gratis |
+
+**Configuración rápida:**
+```bash
+# .env - Solo cambia el provider!
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-your-key
+```
+
+La URL base y modelo por defecto se auto-configuran según el provider.
 
 ---
 

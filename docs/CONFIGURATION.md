@@ -18,25 +18,46 @@
 ## 🔑 Variables de Entorno (.env)
 
 ```bash
-# API Keys (REQUERIDO)
-OPENAI_API_KEY=sk-...
+# ═══════════════════════════════════════════════════════════════
+# AI Provider Selection (NEW!)
+# ═══════════════════════════════════════════════════════════════
+AI_PROVIDER=openai  # Options: openai, deepseek, claude, ollama
 
-# Configuración de IA (opcional)
-AI_BASE_URL=https://api.deepseek.com/v1
-AI_MODEL=deepseek-chat
+# ═══════════════════════════════════════════════════════════════
+# Provider-specific API Keys
+# ═══════════════════════════════════════════════════════════════
+# OpenAI
+OPENAI_API_KEY=sk-your-openai-key
 
-# APIs externas (opcional)
-SHODAN_API_KEY=...
-BREACHDIRECTORY_API_KEY=...
+# DeepSeek (cheaper alternative)
+# DEEPSEEK_API_KEY=sk-your-deepseek-key
+
+# Claude (Anthropic)
+# CLAUDE_API_KEY=sk-ant-your-claude-key
+
+# Ollama (local, no key needed)
+# OLLAMA_HOST=http://localhost:11434
+
+# ═══════════════════════════════════════════════════════════════
+# Model Selection (optional, uses provider default if not set)
+# ═══════════════════════════════════════════════════════════════
+# AI_MODEL=gpt-4o-mini
+
+# ═══════════════════════════════════════════════════════════════
+# External APIs (optional)
+# ═══════════════════════════════════════════════════════════════
+# SHODAN_API_KEY=...
+# BREACHDIRECTORY_API_KEY=...
 ```
 
 ### Proveedores de IA Soportados
 
-| Proveedor | AI_BASE_URL | AI_MODEL |
-|-----------|-------------|----------|
-| OpenAI | `https://api.openai.com/v1` | `gpt-4`, `gpt-3.5-turbo` |
-| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| Local (LM Studio) | `http://localhost:1234/v1` | (tu modelo) |
+| Proveedor | API Key Variable | Base URL (auto) | Modelos |
+|-----------|------------------|-----------------|---------|
+| **OpenAI** | `OPENAI_API_KEY` | `api.openai.com/v1` | gpt-4o-mini, gpt-4, gpt-3.5-turbo |
+| **DeepSeek** | `DEEPSEEK_API_KEY` | `api.deepseek.com/v1` | deepseek-chat, deepseek-coder |
+| **Claude** | `CLAUDE_API_KEY` | `api.anthropic.com/v1` | claude-3-haiku, claude-3-sonnet |
+| **Ollama** | (none) | `localhost:11434/v1` | llama3, mistral, codellama |
 
 ---
 
@@ -49,11 +70,14 @@ BREACHDIRECTORY_API_KEY=...
 # Configuración de IA
 # ═══════════════════════════════════════════════════
 ai:
-  # Base URL del API
-  base_url: "https://api.deepseek.com/v1"
+  # Provider: openai, deepseek, claude, ollama
+  provider: "openai"
   
-  # Modelo a usar
-  model: "deepseek-chat"
+  # Model (uses provider default if not set)
+  model: "gpt-4o-mini"
+  
+  # Custom base URL (optional - overrides provider default)
+  # base_url: "https://api.openai.com/v1"
   
   # Creatividad (0.0 = determinista, 1.0 = creativo)
   temperature: 0.7
@@ -239,24 +263,34 @@ volumes:
 
 ```bash
 # .env
+AI_PROVIDER=openai
 OPENAI_API_KEY=sk-your-key-here
-AI_MODEL=gpt-4
+AI_MODEL=gpt-4o-mini
 ```
 
-### Para DeepSeek
+### Para DeepSeek (más barato)
 
 ```bash
 # .env
-OPENAI_API_KEY=sk-your-deepseek-key
-AI_BASE_URL=https://api.deepseek.com/v1
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-your-deepseek-key
 AI_MODEL=deepseek-chat
 ```
 
-### Para LM Studio (Local)
+### Para Claude (Anthropic)
 
 ```bash
 # .env
-OPENAI_API_KEY=not-needed
-AI_BASE_URL=http://localhost:1234/v1
-AI_MODEL=local-model
+AI_PROVIDER=claude
+CLAUDE_API_KEY=sk-ant-your-claude-key
+AI_MODEL=claude-3-haiku-20240307
+```
+
+### Para Ollama (Local - Gratis)
+
+```bash
+# .env
+AI_PROVIDER=ollama
+AI_MODEL=llama3
+# No necesita API key, pero Ollama debe estar corriendo en localhost:11434
 ```

@@ -42,18 +42,17 @@ python main.py
 - Planifica y ejecuta ataques automáticamente
 - Analiza resultados y decide siguiente paso
 - Genera reportes de hallazgos
-- Soporta múltiples modelos (OpenAI, DeepSeek, local)
+- **Multi-proveedor**: OpenAI, DeepSeek, Claude, Ollama (local)
 
 ### 🛠️ +25 Herramientas Integradas
 
 | Categoría | Herramientas |
-|-----------|--------------|
-| **Recon** | Nmap, Shodan, Subdomain Scanner, WhatWeb |
-| **Web** | SQLMap, XSS Scanner, Gobuster, WPScan |
-| **OSINT** | Maigret, TheHarvester, Phone Lookup, Email Checker |
-| **Exploit** | SearchSploit, Hydra, Hashcat |
-| **Network** | ARP Spoofing, Packet Sniffer, Wi-Fi Audit |
-| **Reporting** | HTML, JSON, Markdown, Phishing Templates |
+|-----------|--------------| 
+| **Recon (1-5)** | Nmap, Shodan, Subdomain Scanner, WordPress, Fuzzing |
+| **Exploit (10-16)** | SQLMap, XSS, SearchSploit, Brute Force, Msfvenom |
+| **Network (20-25)** | Wi-Fi Audit, Sniffer, ARP Spoofing, Hash Cracker |
+| **OSINT (30-35)** | Maigret, TheHarvester, Phone, Email, Metadata |
+| **Reporting (40-42)** | HTML, JSON, Markdown Reports |
 
 ### ⚙️ Características Avanzadas
 - 🎨 **Temas de colores** (default, matrix, ocean, purple, minimal)
@@ -63,6 +62,8 @@ python main.py
 - 📝 **Logging centralizado** con rotación
 - 🔄 **Retry automático** en llamadas API
 - ✅ **Tests unitarios** incluidos
+- 🆕 **Arquitectura modular** - Menú data-driven
+- 🆕 **Auto-instalación** de herramientas faltantes
 
 ---
 
@@ -157,12 +158,14 @@ Para documentación detallada, consulta:
 
 ```
 redai/
-├── ai/                 # Cliente de IA y configuración
-│   └── client.py       # Conexión con OpenAI/DeepSeek
+├── ai/                 # Cliente de IA multi-proveedor
+│   └── client.py       # OpenAI/DeepSeek/Claude/Ollama
 ├── core/               # Utilidades centrales
 │   ├── display.py      # Sistema de output con temas
 │   ├── logger.py       # Logging centralizado
-│   └── utils.py        # Funciones auxiliares
+│   ├── utils.py        # Funciones auxiliares
+│   ├── menu.py         # 🆕 Menú data-driven (MenuOption)
+│   └── handlers.py     # 🆕 Handlers centralizados
 ├── database/           # Persistencia con SQLModel
 │   ├── models.py       # Modelos de datos
 │   └── repository.py   # Operaciones CRUD
@@ -173,6 +176,7 @@ redai/
 │   ├── osint/          # Inteligencia de fuentes abiertas
 │   ├── network/        # Herramientas de red
 │   └── reporting/      # Generación de reportes
+├── config.py           # Configuración + AI_PROVIDERS registry
 └── cli.py              # Interfaz de línea de comandos
 ```
 

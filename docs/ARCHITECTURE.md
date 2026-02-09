@@ -17,16 +17,18 @@ redai/
 ├── redai/                  # Paquete principal
 │   ├── __init__.py
 │   ├── cli.py              # Interfaz de línea de comandos (Typer)
-│   ├── config.py           # Sistema de configuración
+│   ├── config.py           # Sistema de configuración + AI_PROVIDERS
 │   │
 │   ├── ai/                 # Módulo de IA
-│   │   ├── client.py       # Cliente OpenAI/DeepSeek con retry
+│   │   ├── client.py       # Cliente multi-proveedor (OpenAI/DeepSeek/Claude/Ollama)
 │   │   └── cortex.py       # Funciones auxiliares de IA
 │   │
 │   ├── core/               # Utilidades centrales
 │   │   ├── display.py      # Output con Rich + temas
 │   │   ├── logger.py       # Logging centralizado
-│   │   └── utils.py        # Funciones auxiliares
+│   │   ├── utils.py        # Funciones auxiliares
+│   │   ├── menu.py         # 🆕 Sistema de menú data-driven (MenuOption)
+│   │   └── handlers.py     # 🆕 Handlers centralizados para cada opción
 │   │
 │   ├── database/           # Persistencia
 │   │   ├── models.py       # Modelos SQLModel
