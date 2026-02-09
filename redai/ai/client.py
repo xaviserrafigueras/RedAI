@@ -29,8 +29,8 @@ def get_client() -> Optional[OpenAI]:
     
     if _client is None:
         provider = settings.ai.provider
-        api_key = settings.ai.api_key or "ollama"  # Ollama doesn't need real key
-        base_url = settings.ai.base_url
+        api_key = settings.openai_api_key or "ollama"  # Gets API key for current provider
+        base_url = settings.ai_base_url
         
         # For Ollama, we don't need a real API key
         if provider == "ollama":
