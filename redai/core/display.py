@@ -16,7 +16,7 @@ from rich.markup import escape
 from rich.live import Live
 from rich.spinner import Spinner
 
-from redai.config import TOOL_DESCRIPTIONS
+from redai.core.descriptions import TOOL_DESCRIPTIONS
 
 
 class OutputMode(Enum):

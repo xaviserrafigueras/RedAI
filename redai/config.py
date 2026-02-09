@@ -2,14 +2,19 @@
 Centralized Configuration for RedAI
 Loads configuration from YAML file, environment variables, and defaults.
 Priority: Environment Variables > YAML Config > Defaults
+
+Uses Pydantic for validation - invalid config.yaml will show clear error messages.
 """
 
 import os
+import sys
 from pathlib import Path
 from typing import Optional, Dict, Any
-from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
+from pydantic import ValidationError
+
+from redai.core.config_models import AppConfig
 
 # Load .env file first
 load_dotenv()
@@ -88,7 +93,7 @@ def get_config_value(yaml_path: str, env_var: str = None, default: Any = None) -
         except (KeyError, TypeError):
             pass
     
-# 3. Return default
+    # 3. Return default
     return default
 
 
@@ -155,178 +160,140 @@ def get_ai_model() -> str:
     return get_config_value("ai.model", "AI_MODEL", default_model)
 
 
-@dataclass
-class AISettings:
-    """AI-related settings with multi-provider support."""
-    provider: str = field(default_factory=lambda: get_config_value(
-        "ai.provider", "AI_PROVIDER", "openai"
-    ))
-    api_key: Optional[str] = field(default_factory=get_ai_api_key)
-    base_url: str = field(default_factory=get_ai_base_url)
-    model: str = field(default_factory=get_ai_model)
-    temperature: float = field(default_factory=lambda: get_config_value(
-        "ai.temperature", None, 0.7
-    ))
-    max_tokens: int = field(default_factory=lambda: get_config_value(
-        "ai.max_tokens", None, 4000
-    ))
-    retry_max_attempts: int = field(default_factory=lambda: get_config_value(
-        "ai.retry.max_attempts", None, 3
-    ))
-    retry_min_wait: int = field(default_factory=lambda: get_config_value(
-        "ai.retry.min_wait", None, 2
-    ))
-    retry_max_wait: int = field(default_factory=lambda: get_config_value(
-        "ai.retry.max_wait", None, 30
-    ))
-
-
-@dataclass
-class AgentSettings:
-    """Agent-related settings."""
-    max_steps: int = field(default_factory=lambda: get_config_value(
-        "agent.max_steps", None, 20
-    ))
-    command_timeout: int = field(default_factory=lambda: get_config_value(
-        "agent.command_timeout", None, 120
-    ))
-    auto_approve: bool = field(default_factory=lambda: get_config_value(
-        "agent.auto_approve", None, False
-    ))
-    max_history: int = field(default_factory=lambda: get_config_value(
-        "agent.max_history", None, 15
-    ))
-    default_project: str = field(default_factory=lambda: get_config_value(
-        "agent.default_project", None, "General"
-    ))
-
-
-@dataclass
-class PathSettings:
-    """Path-related settings."""
-    logs: str = field(default_factory=lambda: get_config_value(
-        "paths.logs", None, "./logs"
-    ))
-    reports: str = field(default_factory=lambda: get_config_value(
-        "paths.reports", None, "./reports"
-    ))
-    database: str = field(default_factory=lambda: get_config_value(
-        "paths.database", None, "./database.db"
-    ))
-
-
-@dataclass
-class APISettings:
-    """External API settings."""
-    breachdirectory_api_key: Optional[str] = field(default_factory=lambda: get_config_value(
-        "apis.breachdirectory_api_key", "BREACHDIRECTORY_API_KEY", None
-    ))
-    shodan_api_key: Optional[str] = field(default_factory=lambda: get_config_value(
-        "apis.shodan_api_key", "SHODAN_API_KEY", None
-    ))
-
-
-@dataclass 
-class LoggingSettings:
-    """Logging-related settings."""
-    level: str = field(default_factory=lambda: get_config_value(
-        "logging.level", None, "INFO"
-    ))
-    file_enabled: bool = field(default_factory=lambda: get_config_value(
-        "logging.file_enabled", None, True
-    ))
-    console_enabled: bool = field(default_factory=lambda: get_config_value(
-        "logging.console_enabled", None, True
-    ))
-    retention_days: int = field(default_factory=lambda: get_config_value(
-        "logging.retention_days", None, 30
-    ))
-
-
-@dataclass
-class UISettings:
-    """UI-related settings."""
-    show_banner: bool = field(default_factory=lambda: get_config_value(
-        "ui.show_banner", None, True
-    ))
-    theme: str = field(default_factory=lambda: get_config_value(
-        "ui.theme", None, "default"
-    ))
-    verbose: bool = field(default_factory=lambda: get_config_value(
-        "ui.verbose", None, False
-    ))
-
-
-@dataclass
-class Settings:
-    """Main application settings container."""
-    ai: AISettings = field(default_factory=AISettings)
-    agent: AgentSettings = field(default_factory=AgentSettings)
-    paths: PathSettings = field(default_factory=PathSettings)
-    apis: APISettings = field(default_factory=APISettings)
-    logging: LoggingSettings = field(default_factory=LoggingSettings)
-    ui: UISettings = field(default_factory=UISettings)
-    
-    # Legacy compatibility properties
-    @property
-    def openai_api_key(self) -> Optional[str]:
-        return self.ai.api_key
-    
-    @property
-    def ai_base_url(self) -> str:
-        return self.ai.base_url
-    
-    @property
-    def ai_model(self) -> str:
-        return self.ai.model
-    
-    @property
-    def default_project(self) -> str:
-        return self.agent.default_project
-    
-    @property
-    def max_agent_history(self) -> int:
-        return self.agent.max_history
-    
-    @property
-    def breachdirectory_api_key(self) -> Optional[str]:
-        return self.apis.breachdirectory_api_key
-    
-    @property
-    def shodan_api_key(self) -> Optional[str]:
-        return self.apis.shodan_api_key
-
-
 def get_tool_config(tool_name: str) -> Dict[str, Any]:
     """Get configuration for a specific tool."""
     tools_config = _yaml_config.get("tools", {})
     return tools_config.get(tool_name, {})
 
 
-# Global settings instance
-settings = Settings()
+# =============================================================================
+# Configuration Loading with Pydantic Validation
+# =============================================================================
+
+def _merge_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge environment variable overrides into config dict."""
+    # AI overrides
+    if "ai" not in config:
+        config["ai"] = {}
+    
+    if os.getenv("AI_PROVIDER"):
+        config["ai"]["provider"] = os.getenv("AI_PROVIDER")
+    if os.getenv("AI_MODEL"):
+        config["ai"]["model"] = os.getenv("AI_MODEL")
+    if os.getenv("AI_BASE_URL"):
+        config["ai"]["base_url"] = os.getenv("AI_BASE_URL")
+    
+    # API key overrides
+    if "apis" not in config:
+        config["apis"] = {}
+    
+    if os.getenv("SHODAN_API_KEY"):
+        config["apis"]["shodan_api_key"] = os.getenv("SHODAN_API_KEY")
+    if os.getenv("BREACHDIRECTORY_API_KEY"):
+        config["apis"]["breachdirectory_api_key"] = os.getenv("BREACHDIRECTORY_API_KEY")
+    
+    return config
 
 
-# Tool descriptions for help system
-TOOL_DESCRIPTIONS = {
-    "nmap": "Escáner de red para descubrir hosts y servicios abiertos. Uso: nmap -sV -sC <target>.",
-    "shodan": "Motor de búsqueda de dispositivos conectados (IoT, Servidores). Requiere API Key.",
-    "sqlmap": "Herramienta automática de SQL Injection. Detecta y explota vulns DB.",
-    "gobuster": "Fuzzer de directorios y subdominios usando diccionarios.",
-    "hashcat": "Cracker de hashes GPU-accelerated. Soporta MD5, SHA, NTLM, etc.",
-    "hydra": "Cracker de fuerza bruta para protocolos (SSH, FTP, HTTP, etc.).",
-    "wifite": "Auditoría automatizada de redes Wi-Fi (WEP, WPA, WPS).",
-    "aircrack-ng": "Suite completa para hackear redes Wi-Fi.",
-    "metasploit": "Framework de explotación con miles de exploits y payloads.",
-    "nikto": "Escáner de vulnerabilidades web (misconfigs, archivos peligrosos).",
-    "wpscan": "Escáner especializado en WordPress (plugins, temas, usuarios).",
-    "maigret": "Rastreo de nombre de usuario en 3000+ sitios web (OSINT).",
-    "phone": "Inteligencia de números telefónicos (Operadora, País, Zona Horaria).",
-    "harvester": "Recolector de emails, subdominios y hosts (TheHarvester).",
-    "dorks": "Generador de Google Dorks para encontrar archivos sensibles y paneles.",
-    "metadata": "Extracción profunda de metadatos en documentos y archivos (PDF, DOC, IMG).",
-    "wifi": "Gestión de perfiles Wi-Fi guardados y ataques de desautenticación.",
-    "sniffer": "Captura y análisis de tráfico de red en tiempo real (Scapy).",
-    "arp": "Ataque MITM (ARP Spoofing) para interceptar tráfico o cortar internet (Kick).",
-    "dns": "DNS Spoofing para redirigir tráfico de dominios legítimos a una IP maliciosa.",
-}
+def load_validated_config() -> AppConfig:
+    """
+    Load and validate configuration using Pydantic.
+    
+    Raises SystemExit with clear error messages if validation fails.
+    """
+    config_data = _merge_env_overrides(_yaml_config.copy())
+    
+    try:
+        return AppConfig(**config_data)
+    except ValidationError as e:
+        # Print errors using plain print() to avoid circular imports
+        print("\n" + "=" * 60)
+        print("❌ CONFIGURATION ERROR - Invalid config.yaml")
+        print("=" * 60)
+        
+        for error in e.errors():
+            location = ".".join(str(loc) for loc in error["loc"])
+            message = error["msg"]
+            print(f"  • {location}: {message}")
+        
+        print("=" * 60)
+        print("Please fix config.yaml and try again.")
+        print("See config.example.yaml for valid options.\n")
+        sys.exit(1)
+
+
+# =============================================================================
+# Global Settings Instance (Validated)
+# =============================================================================
+settings = load_validated_config()
+
+
+# =============================================================================
+# Extended Settings Properties (for backward compatibility)
+# =============================================================================
+class Settings:
+    """
+    Wrapper class that combines Pydantic config with runtime-resolved values.
+    This maintains backward compatibility with existing code.
+    """
+    
+    def __init__(self, config: AppConfig):
+        self._config = config
+    
+    # Delegate to Pydantic config
+    @property
+    def ai(self):
+        return self._config.ai
+    
+    @property
+    def agent(self):
+        return self._config.agent
+    
+    @property
+    def paths(self):
+        return self._config.paths
+    
+    @property
+    def apis(self):
+        return self._config.apis
+    
+    @property
+    def logging(self):
+        return self._config.logging
+    
+    @property
+    def ui(self):
+        return self._config.ui
+    
+    # Runtime-resolved properties (need API key lookup)
+    @property
+    def openai_api_key(self) -> Optional[str]:
+        return get_ai_api_key()
+    
+    @property
+    def ai_base_url(self) -> str:
+        return get_ai_base_url()
+    
+    @property
+    def ai_model(self) -> str:
+        return self._config.ai.model
+    
+    @property
+    def default_project(self) -> str:
+        return self._config.agent.default_project
+    
+    @property
+    def max_agent_history(self) -> int:
+        return self._config.agent.max_history
+    
+    @property
+    def breachdirectory_api_key(self) -> Optional[str]:
+        return self._config.apis.breachdirectory_api_key
+    
+    @property
+    def shodan_api_key(self) -> Optional[str]:
+        return self._config.apis.shodan_api_key
+
+
+# Replace raw config with wrapped Settings
+settings = Settings(settings)
