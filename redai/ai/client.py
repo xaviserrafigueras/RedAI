@@ -24,22 +24,34 @@ _client: Optional[OpenAI] = None
 
 
 def get_client() -> Optional[OpenAI]:
-    """Get or create the OpenAI client instance."""
+    """Get or create the OpenAI client instance (works with any OpenAI-compatible API)."""
     global _client
     
-    if _client is None and settings.openai_api_key:
+    if _client is None:
+        provider = settings.ai.provider
+        api_key = settings.ai.api_key or "ollama"  # Ollama doesn't need real key
+        base_url = settings.ai.base_url
+        
+        # For Ollama, we don't need a real API key
+        if provider == "ollama":
+            api_key = "ollama"
+        
+        if not api_key or api_key == "":
+            logger.warning(f"No API key configured for provider: {provider}")
+            return None
+        
         _client = OpenAI(
-            api_key=settings.openai_api_key,
-            base_url=settings.ai_base_url
+            api_key=api_key,
+            base_url=base_url
         )
-        logger.info(f"AI client initialized with model: {settings.ai_model}")
+        logger.info(f"AI client initialized: provider={provider}, model={settings.ai.model}, base_url={base_url}")
     
     return _client
 
 
 def get_model_name() -> str:
     """Get the configured AI model name."""
-    return settings.ai_model
+    return settings.ai.model
 
 
 @retry(

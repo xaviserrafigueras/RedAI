@@ -88,22 +88,82 @@ def get_config_value(yaml_path: str, env_var: str = None, default: Any = None) -
         except (KeyError, TypeError):
             pass
     
-    # 3. Return default
+# 3. Return default
     return default
+
+
+# =============================================================================
+# AI Provider Registry
+# =============================================================================
+AI_PROVIDERS = {
+    "openai": {
+        "base_url": "https://api.openai.com/v1",
+        "env_key": "OPENAI_API_KEY",
+        "default_model": "gpt-4o-mini",
+    },
+    "deepseek": {
+        "base_url": "https://api.deepseek.com/v1",
+        "env_key": "DEEPSEEK_API_KEY",
+        "default_model": "deepseek-chat",
+    },
+    "claude": {
+        "base_url": "https://api.anthropic.com/v1",
+        "env_key": "CLAUDE_API_KEY",
+        "default_model": "claude-3-haiku-20240307",
+    },
+    "ollama": {
+        "base_url": "http://localhost:11434/v1",
+        "env_key": None,  # No API key needed for local
+        "default_model": "llama3",
+    },
+}
+
+
+def get_provider_config() -> dict:
+    """Get the current AI provider configuration."""
+    provider = get_config_value("ai.provider", "AI_PROVIDER", "openai").lower()
+    return AI_PROVIDERS.get(provider, AI_PROVIDERS["openai"])
+
+
+def get_ai_api_key() -> str:
+    """Get the API key for the current provider."""
+    provider = get_config_value("ai.provider", "AI_PROVIDER", "openai").lower()
+    provider_config = AI_PROVIDERS.get(provider, AI_PROVIDERS["openai"])
+    
+    env_key = provider_config.get("env_key")
+    if env_key:
+        return os.getenv(env_key, "")
+    return ""  # Ollama doesn't need a key
+
+
+def get_ai_base_url() -> str:
+    """Get the base URL for the current provider (or custom if specified)."""
+    # Check for custom base_url first
+    custom_url = get_config_value("ai.base_url", "AI_BASE_URL", None)
+    if custom_url:
+        return custom_url
+    
+    # Otherwise use provider default
+    provider_config = get_provider_config()
+    return provider_config.get("base_url", "https://api.openai.com/v1")
+
+
+def get_ai_model() -> str:
+    """Get the AI model (from config or provider default)."""
+    provider_config = get_provider_config()
+    default_model = provider_config.get("default_model", "gpt-4o-mini")
+    return get_config_value("ai.model", "AI_MODEL", default_model)
 
 
 @dataclass
 class AISettings:
-    """AI-related settings."""
-    api_key: Optional[str] = field(default_factory=lambda: get_config_value(
-        "ai.api_key", "OPENAI_API_KEY", None
+    """AI-related settings with multi-provider support."""
+    provider: str = field(default_factory=lambda: get_config_value(
+        "ai.provider", "AI_PROVIDER", "openai"
     ))
-    base_url: str = field(default_factory=lambda: get_config_value(
-        "ai.base_url", "AI_BASE_URL", "https://api.openai.com/v1"
-    ))
-    model: str = field(default_factory=lambda: get_config_value(
-        "ai.model", "AI_MODEL", "gpt-4o-mini"
-    ))
+    api_key: Optional[str] = field(default_factory=get_ai_api_key)
+    base_url: str = field(default_factory=get_ai_base_url)
+    model: str = field(default_factory=get_ai_model)
     temperature: float = field(default_factory=lambda: get_config_value(
         "ai.temperature", None, 0.7
     ))

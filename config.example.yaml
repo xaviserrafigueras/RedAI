@@ -10,14 +10,19 @@
 # AI Configuration
 # ─────────────────────────────────────────────────────────────────────────────
 ai:
-  # API Key - RECOMMENDED: Set via OPENAI_API_KEY environment variable instead
-  # api_key: "your-api-key-here"
+  # AI Provider: openai, deepseek, claude, ollama
+  # Each provider has its own API key in .env
+  provider: "openai"
   
-  # Base URL for the AI API (OpenAI, DeepSeek, Local LLM, etc.)
-  base_url: "https://api.deepseek.com/v1"
+  # Model to use (provider-specific)
+  # OpenAI: gpt-4o-mini, gpt-4, gpt-3.5-turbo
+  # DeepSeek: deepseek-chat, deepseek-coder
+  # Claude: claude-3-haiku-20240307, claude-3-sonnet-20240229
+  # Ollama: llama3, mistral, codellama
+  model: "gpt-4o-mini"
   
-  # Model to use for AI completions
-  model: "deepseek-chat"
+  # Custom base URL (advanced - overrides provider default)
+  # base_url: "https://api.openai.com/v1"
   
   # Temperature (0.0 = deterministic, 1.0 = creative)
   temperature: 0.7
