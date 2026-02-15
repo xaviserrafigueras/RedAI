@@ -17,9 +17,9 @@ services:
     volumes:
       - ./logs:/app/logs # Logs persist outside container
       - ./reports:/app/reports # Reports persist outside container
-      - ./database.db:/app/database.db # Database persists
+      # - ./database.db:/app/database.db # Database persists (disabled for Windows compatibility)
 
-    # Environment variables
+      # Environment variables
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}

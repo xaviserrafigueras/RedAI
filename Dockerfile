@@ -14,7 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-venv \
-    # Essential pentesting tools
+    # Build tools
+    golang-go \
+    git \
+    build-essential \
+    # Essential pentesting tools (already included)
     nmap \
     gobuster \
     dirb \
@@ -26,12 +30,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wpscan \
     hydra \
     theharvester \
+    # Additional tools required by RedAI
+    masscan \
+    netcat-traditional \
+    aircrack-ng \
+    exiftool \
+    hashcat \
+    john \
+    # Network diagnostic tools (for Cortex agent)
+    iproute2 \
+    net-tools \
+    iputils-ping \
     # Utils
     curl \
     wget \
-    git \
+    jq \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Install Go-based tools (subfinder, amass, etc.)
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
+    go install -v github.com/owasp-amass/amass/v4/...@master && \
+    mv /root/go/bin/* /usr/local/bin/ && \
+    rm -rf /root/go
+
+# Install maigret (OSINT username tool)
+RUN pip3 install --no-cache-dir maigret
 
 # Create virtual environment
 RUN python3 -m venv /opt/venv

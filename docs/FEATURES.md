@@ -665,6 +665,7 @@ HANDLERS = {
 }
 ```
 
+
 **Beneficios:**
 - Añadir herramientas = 1 línea en `menu.py`
 - Menú se auto-genera desde datos
